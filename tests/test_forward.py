@@ -153,8 +153,9 @@ def test_faster_rcnn_ohem_forward():
         gt_labels=gt_labels,
         return_loss=True)
     assert isinstance(losses, dict)
-    loss, _ = detector._parse_losses(losses)
-    assert float(loss.item()) > 0
+    from mmdet.apis.train import parse_losses
+    total_loss = float(parse_losses(losses)[0].item())
+    assert total_loss > 0
 
     # Test forward train with an empty truth batch
     mm_inputs = _demo_mm_inputs(input_shape, num_items=[0])
@@ -169,13 +170,9 @@ def test_faster_rcnn_ohem_forward():
         gt_labels=gt_labels,
         return_loss=True)
     assert isinstance(losses, dict)
-    loss, _ = detector._parse_losses(losses)
-    assert float(loss.item()) > 0
-
 
 # HTC is not ready yet
 @pytest.mark.parametrize('cfg_file', [
-    'cascade_rcnn/cascade_mask_rcnn_r50_fpn_1x_coco.py',
     'mask_rcnn/mask_rcnn_r50_fpn_1x_coco.py',
     'grid_rcnn/grid_rcnn_r50_fpn_gn-head_2x_coco.py',
     'ms_rcnn/ms_rcnn_r50_fpn_1x_coco.py'
@@ -204,10 +201,10 @@ def test_two_stage_forward(cfg_file):
         gt_masks=gt_masks,
         return_loss=True)
     assert isinstance(losses, dict)
-    loss, _ = detector._parse_losses(losses)
-    loss.requires_grad_(True)
-    assert float(loss.item()) > 0
-    loss.backward()
+    from mmdet.apis.train import parse_losses
+    total_loss = parse_losses(losses)[0].requires_grad_(True)
+    assert float(total_loss.item()) > 0
+    total_loss.backward()
 
     # Test forward train with an empty truth batch
     mm_inputs = _demo_mm_inputs(input_shape, num_items=[0])
@@ -224,10 +221,10 @@ def test_two_stage_forward(cfg_file):
         gt_masks=gt_masks,
         return_loss=True)
     assert isinstance(losses, dict)
-    loss, _ = detector._parse_losses(losses)
-    loss.requires_grad_(True)
-    assert float(loss.item()) > 0
-    loss.backward()
+    from mmdet.apis.train import parse_losses
+    total_loss = parse_losses(losses)[0].requires_grad_(True)
+    assert float(total_loss.item()) > 0
+    total_loss.backward()
 
     # Test forward test
     with torch.no_grad():
